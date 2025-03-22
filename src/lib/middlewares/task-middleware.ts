@@ -63,13 +63,12 @@ export const allowDependTask =
  * Update recursive
  */
 export const recursiveParams =
-  (db: DB) => async (request: TaskRequest, _: Response, next: NextFunction) => {
+  () => async (request: TaskRequest, _: Response, next: NextFunction) => {
     if (request.body.cadence) {
-      const lastGeneratedTime = generateRecurTime(
+      // @ts-ignore
+      request.body.lastGeneratedTime = generateRecurTime(
         request.body.cadence as unknown as Cadence,
       );
-      // @ts-ignore
-      request.body.lastGeneratedTime = lastGeneratedTime;
       return next();
     } else {
       next();

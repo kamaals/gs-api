@@ -13,7 +13,6 @@ import { createErrorResponse } from "@/lib/services/error";
 import { handleError } from "@/lib/utils/error-handle";
 import { Task } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { allowTaskDependency } from "@/api/task/utils";
 
 export const createTask =
   (db: DB) => async (request: TaskRequest, response: Response) => {

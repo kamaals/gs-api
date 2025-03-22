@@ -1,5 +1,5 @@
 import type { DB, TaskWithChildren } from "@/@types";
-import { API_PATH, env } from "@/lib/config";
+import { API_PATH } from "@/lib/config";
 import { getServer } from "@/lib/server";
 import supertest from "supertest";
 import { connectDB } from "../../../lib/db/db";

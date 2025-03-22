@@ -1,5 +1,5 @@
-import type { Cadence, TaskType } from "@/@types";
-import { addDays, addHours, addMinutes, addMonths, addWeeks } from "date-fns";
+import type { Cadence } from "@/@types";
+import { addHours, addMinutes } from "date-fns";
 
 export const TASKS: Array<{
   title: string;

@@ -68,7 +68,7 @@ export const updateTaskToRecur =
         .set({ done: false })
         .where(or(inArray(Task.id, ids), inArray(Task.parentId, ids))); // reset depend tasks
 
-      const tasks = await db
+      return await db
         .update(Task)
         .set({
           recurTimes: increment(Task.recurTimes),
@@ -77,7 +77,6 @@ export const updateTaskToRecur =
         })
         .where(inArray(Task.id, ids))
         .returning(); // update parent tasks only
-      return tasks;
     } catch (e) {
       return false;
     }

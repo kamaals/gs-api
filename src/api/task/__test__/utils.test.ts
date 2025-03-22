@@ -6,7 +6,7 @@ import {
   updateTaskToRecur,
 } from "../utils";
 
-import { DB, TaskType, TaskWithID } from "../../../@types";
+import type { DB, TaskWithID } from "../../../@types";
 import { connectDB } from "../../../lib/db/db";
 
 let db: DB | null = null;
