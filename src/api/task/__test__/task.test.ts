@@ -5,6 +5,8 @@ import supertest from "supertest";
 import { connectDB } from "../../../lib/db/db";
 import type { App } from "supertest/types";
 import { deleteAllRows, seedSomeTasks } from "../utils";
+import { CHILDREN_TASK, PARENT_TASK, RECUR_TASK } from "./mock";
+import { addWeeks, format } from "date-fns";
 
 let app: App | null = null;
 let db: DB | null = null;
@@ -71,11 +73,30 @@ describe("TASK API", () => {
 
   describe("update task", () => {
     let task: null | Array<TaskWithChildren> = null;
-
+    let alreadyRecur: Array<TaskWithChildren> = [];
+    let parentTask: Array<TaskWithChildren> = [];
+    let childrenTask: Array<TaskWithChildren> = [];
     beforeAll(async () => {
       task = (await seedSomeTasks(
         db as DB,
+      )()) as unknown as Array<TaskWithChildren>;
+
+      parentTask = (await seedSomeTasks(db as DB)([
+        PARENT_TASK,
+      ])) as unknown as Array<TaskWithChildren>;
+
+      alreadyRecur = (await seedSomeTasks(db as DB)(
+        RECUR_TASK,
       )) as unknown as Array<TaskWithChildren>;
+
+      if (parentTask.length > 0) {
+        const child = CHILDREN_TASK.map((t) => ({
+          title: t.title,
+          parentId: parentTask[0]?.id,
+        }));
+        // @ts-expect-error
+        childrenTask = await seedSomeTasks(db as DB)(child);
+      }
     });
 
     it("Should return 404 for wrong field id", async () => {
@@ -91,8 +112,48 @@ describe("TASK API", () => {
       const { body, statusCode } = await supertest(app as App)
         .put(`${API_PATH}task/${(task || [])[0]?.id}`)
         .send({ title: "Updated Task" });
-      expect(statusCode).toBe(200);
+      expect(statusCode).toBe(206);
       expect(body.message).toBe("Success");
+    });
+
+    it("Should return 206 for marking done task", async () => {
+      const { body, statusCode } = await supertest(app as App)
+        .put(`${API_PATH}task/${(task || [])[0]?.id}`)
+        .send({ done: true });
+      expect(statusCode).toBe(206);
+      expect(body.message).toBe("Success");
+    });
+
+    it("Should return 403 for marking done parent task while pending dependency", async () => {
+      const { statusCode } = await supertest(app as App)
+        .put(`${API_PATH}task/${(parentTask || [])[0]?.id}`)
+        .send({ done: true });
+      expect(statusCode).toBe(403);
+    });
+
+    it("Should 206 for updating cadence", async () => {
+      const { statusCode, body } = await supertest(app as App)
+        .put(`${API_PATH}task/${(parentTask || [])[0]?.id}`)
+        .send({ cadence: "week" });
+
+      expect(statusCode).toBe(206);
+      expect(format(body.data[0].lastGeneratedTime, "yyyy-MM-dd")).toBe(
+        format(addWeeks(new Date(), 1), "yyyy-MM-dd"),
+      );
+      expect(format(body.data[0].recurTime, "yyyy-MM-dd")).toBe(
+        format(new Date(), "yyyy-MM-dd"),
+      );
+    });
+
+    it("403 for updating cadence", async () => {
+      const { statusCode, body } = await supertest(app as App)
+        .put(`${API_PATH}task/${(alreadyRecur || [])[0]?.id}`)
+        .send({ cadence: "week" });
+
+      expect(statusCode).toBe(403);
+      expect(body.message).toBe(
+        "Could not recurse. This task is already recursive task",
+      );
     });
   });
 });

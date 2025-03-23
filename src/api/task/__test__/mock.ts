@@ -1,13 +1,15 @@
 import type { Cadence } from "@/@types";
-import { addHours, addMinutes } from "date-fns";
+import { addDays, addHours, addMinutes } from "date-fns";
 
-export const TASKS: Array<{
+export type MockTaskType = {
   title: string;
   cadence: Cadence;
   lastGeneratedTime: Date;
   recurTime?: Date;
   recurTimes: number;
-}> = [
+};
+
+export const TASKS: Array<MockTaskType> = [
   {
     title: "Test Task Recurs by day",
     cadence: "day",
@@ -42,6 +44,37 @@ export const TASKS: Array<{
     title: "Test Task 6 Recurs by Month",
     cadence: "month",
     lastGeneratedTime: addMinutes(new Date(), 1),
+    recurTimes: 0,
+  },
+];
+
+export const PARENT_TASK: Omit<
+  MockTaskType,
+  "cadence" | "lastGeneratedTime" | "recurTimes"
+> = {
+  title: "Parent Task",
+};
+
+export const CHILDREN_TASK: Array<
+  Omit<MockTaskType, "cadence" | "lastGeneratedTime" | "recurTimes">
+> = [
+  {
+    title: "Child Task 1",
+  },
+  {
+    title: "Child Task 2",
+  },
+  {
+    title: "Child Task 3",
+  },
+];
+
+export const RECUR_TASK: Array<MockTaskType> = [
+  {
+    title: "Test Task Recurs by day",
+    cadence: "day",
+    lastGeneratedTime: addDays(new Date(), 1),
+    recurTime: new Date(),
     recurTimes: 0,
   },
 ];

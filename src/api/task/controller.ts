@@ -16,12 +16,13 @@ import { eq } from "drizzle-orm";
 
 export const createTask =
   (db: DB) => async (request: TaskRequest, response: Response) => {
+    const data = request.body;
     try {
       const task = await db
         .insert(Task)
         // @ts-ignore
         .values({
-          ...request.body,
+          ...data,
         })
         .returning();
 
@@ -49,18 +50,20 @@ export const createTask =
 
 export const updateTask =
   (db: DB) => async (request: TaskRequest, response: Response) => {
+    const data = request.body;
     try {
       const task = await db
         .update(Task)
-        .set({ ...request.body })
+        .set({ ...data })
         .where(eq(Task.id, request.params.id))
         .returning();
       createSuccessResponse<Array<TaskWithChildren>>(
         response,
         [...task] as unknown as Array<TaskWithChildren>,
-        StatusCodes.OK,
+        StatusCodes.PARTIAL_CONTENT,
       );
     } catch (e) {
+      console.log(e);
       createErrorResponse<string>(
         response,
         handleError(e),
@@ -94,8 +97,11 @@ export const getTasks =
     try {
       const tasks = await db.query.Task.findMany({
         where: (task, { isNull }) => isNull(task.parentId),
+        orderBy: (task, { desc }) => [desc(task.priority)],
         with: {
-          children: true,
+          children: {
+            orderBy: (task, { asc }) => [asc(task.title)],
+          },
         },
       });
       createSuccessResponse<Array<TaskWithChildren>>(

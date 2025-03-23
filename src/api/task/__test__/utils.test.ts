@@ -14,7 +14,7 @@ let db: DB | null = null;
 beforeAll(async () => {
   db = (await connectDB()) as unknown as DB;
   await deleteAllRows(db as DB);
-  await seedSomeTasks(db as DB);
+  await seedSomeTasks(db as DB)();
 });
 
 describe("Utils Test", () => {

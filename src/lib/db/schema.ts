@@ -10,19 +10,18 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-export const priorityEnum = pgEnum("priority", ["low", "medium", "high"]);
 export const taskCadenceEnum = pgEnum("task_cadence", ["day", "week", "month"]);
 
 export const Task = pgTable("task", {
   id: uuid("id").primaryKey().defaultRandom(),
-  title: text("name").notNull(),
+  title: text("title").notNull(),
   description: text("slug").default("Task description"),
   parentId: uuid("parent_id").references((): AnyPgColumn => Task.id, {
     onDelete: "cascade",
   }),
   done: boolean("done").notNull().default(false),
   cadence: taskCadenceEnum("cadence"),
-  priority: priorityEnum("priority").default("low"),
+  priority: integer("priority").default(0),
   lastGeneratedTime: timestamp("last_generated_time"),
   recurTime: timestamp("last_time"),
   recurTimes: integer("recur_times").default(0),

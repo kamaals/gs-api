@@ -12,12 +12,12 @@ import {
 } from "drizzle-orm";
 import { Task } from "@/lib/db/schema";
 import { env } from "@/lib/config";
-import { addHours, addWeeks, addMonths } from "date-fns";
+import { addWeeks, addMonths, addDays } from "date-fns";
 import { TASKS } from "@/api/task/__test__/mock";
 
 export const checkDependencyTasksToBeComplete =
   (db: DB) => async (id: string) => {
-    const task = await db.query.Task.findFirst({
+    return db.query.Task.findFirst({
       where: eq(Task.id, id),
       with: {
         children: {
@@ -25,8 +25,6 @@ export const checkDependencyTasksToBeComplete =
         },
       },
     });
-    console.log("Status", task && task.children.length > 0);
-    return task;
   };
 
 export const allowTaskDependency =
@@ -39,11 +37,26 @@ export const allowTaskDependency =
     return !!task;
   };
 
+export const checkTaskCanRecurse =
+  (db: DB) =>
+  async (id?: string): Promise<boolean> => {
+    if (!id) return true;
+    const task = await db.query.Task.findFirst({
+      where: and(
+        eq(Task.id, id),
+        isNull(Task.parentId),
+        isNull(Task.lastGeneratedTime),
+        isNull(Task.cadence),
+      ),
+    });
+    return !!task;
+  };
+
 export const generateRecurTime = (cadence: Cadence) => {
   // update task
   switch (cadence) {
     case "day":
-      return addHours(new Date(), 1);
+      return addDays(new Date(), 1);
     case "week":
       return addWeeks(new Date(), 1);
     case "month":
@@ -78,6 +91,7 @@ export const updateTaskToRecur =
         .where(inArray(Task.id, ids))
         .returning(); // update parent tasks only
     } catch (e) {
+      console.log(e);
       return false;
     }
   };
@@ -95,10 +109,21 @@ export const deleteAllRows = async (db: DB) => {
   await db.delete(Task);
 };
 
-export const seedSomeTasks = async (db: DB) => {
-  if (env.NODE_ENV !== "test") return;
-  return db.insert(Task).values(TASKS).returning();
-};
+export const seedSomeTasks =
+  (db: DB) =>
+  async (
+    tasks: Array<{
+      title: string;
+      cadence?: Cadence;
+      lastGeneratedTime?: Date;
+      recurTime?: Date;
+      recurTimes?: number;
+      parentId?: string;
+    }> = TASKS,
+  ) => {
+    if (env.NODE_ENV !== "test") return;
+    return db.insert(Task).values(tasks).returning();
+  };
 
 export const idsAndCadence = (
   tasks: Array<Partial<TaskWithID>>,
