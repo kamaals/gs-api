@@ -5,11 +5,11 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 export const connectDB = async () => {
-  const client = postgres(env.DB_URL,
-    { max: 1 },
-  );
+  const client = postgres(env.DATABASE_URL, { max: 1 });
   return drizzle(client, {
     schema,
-    ...(process.env.NODE_ENV === "test" ? {} : { logger: new WinstonDrizzleLogger() }),
+    ...(process.env.NODE_ENV === "test"
+      ? {}
+      : { logger: new WinstonDrizzleLogger() }),
   });
 };
