@@ -1,15 +1,17 @@
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { createInsertSchema } from "drizzle-zod";
 import { Task } from "@/lib/db/schema";
 import { object, string } from "zod";
+
 // @ts-ignore
 export const insetTaskSchema = createInsertSchema(Task).omit({ id: true });
-// @ts-ignore
-export const selectTaskSchema = createSelectSchema(Task);
 
 export const byIDParam = object({
   id: string().uuid(),
 });
 
 export const getTaskByQuery = object({
-  status: string().optional(),
+  order_done: string().optional(),
+  order_priority: string().optional(),
+  filter_done: string().optional(),
+  filter_priority: string().optional(),
 }).strict();

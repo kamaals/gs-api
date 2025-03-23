@@ -1,4 +1,10 @@
-import type { Cadence, DB, TaskRequest, TaskType } from "@/@types";
+import type {
+  Cadence,
+  DB,
+  TaskQueryRequest,
+  TaskRequest,
+  TaskType,
+} from "@/@types";
 import type { NextFunction, Response } from "express";
 import {
   allowTaskDependency,
@@ -9,6 +15,10 @@ import {
 import { createErrorResponse } from "@/lib/services/error";
 import { StatusCodes } from "http-status-codes";
 import { handleError } from "@/lib/utils/error-handle";
+import {
+  extractBoolQueryParam,
+  extractStringQueryParam,
+} from "@/lib/middlewares/utils";
 
 /*
  * Middleware to check if request to complete the task
@@ -105,6 +115,50 @@ export const conditionallyAllowRecursive =
       next();
     }
   };
+
+export const buildFilterQuery = (
+  request: TaskQueryRequest,
+  _: Response,
+  next: NextFunction,
+) => {
+  const done = extractBoolQueryParam(request, "filter_done");
+  const priority = extractStringQueryParam(request, "filter_priority");
+  const filter = {};
+  if (done !== undefined) {
+    // @ts-ignore
+    filter.done = done;
+  }
+  if (priority !== undefined) {
+    // @ts-ignore
+    filter.priority = priority;
+  }
+  // @ts-ignore
+  request.query.filter =
+    done !== undefined || priority !== undefined ? filter : undefined;
+  next();
+};
+
+export const buildOrderQuery = (
+  request: TaskQueryRequest,
+  _: Response,
+  next: NextFunction,
+) => {
+  const done = extractStringQueryParam(request, "order_done");
+  const priority = extractStringQueryParam(request, "order_priority");
+  const order = {};
+  if (done !== undefined) {
+    // @ts-ignore
+    order.done = done;
+  }
+  if (priority !== undefined) {
+    // @ts-ignore
+    order.priority = priority;
+  }
+  // @ts-ignore
+  request.query.order =
+    done !== undefined || priority !== undefined ? order : undefined;
+  next();
+};
 
 export const flatRequestBody = (
   request: TaskRequest,

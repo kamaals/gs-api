@@ -7,6 +7,8 @@ export type MockTaskType = {
   lastGeneratedTime: Date;
   recurTime?: Date;
   recurTimes: number;
+  priority?: number;
+  done?: boolean;
 };
 
 export const TASKS: Array<MockTaskType> = [
@@ -15,24 +17,29 @@ export const TASKS: Array<MockTaskType> = [
     cadence: "day",
     lastGeneratedTime: addHours(new Date(), 2),
     recurTimes: 0,
+    priority: 1,
+    done: true,
   },
   {
     title: "Test Task 2 Recurs by day",
     cadence: "day",
     lastGeneratedTime: addMinutes(new Date(), 1),
     recurTimes: 0,
+    priority: 1,
   },
   {
     title: "Test Task 3 Recurs by week",
     cadence: "week",
     lastGeneratedTime: addHours(new Date(), 2),
     recurTimes: 0,
+    priority: 0,
   },
   {
     title: "Test Task 4 Recurs by week",
     cadence: "week",
     lastGeneratedTime: addMinutes(new Date(), -1),
     recurTimes: 0,
+    priority: 2,
   },
   {
     title: "Test Task 5 Recurs by Month",

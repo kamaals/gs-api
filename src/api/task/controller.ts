@@ -12,7 +12,7 @@ import { StatusCodes } from "http-status-codes";
 import { createErrorResponse } from "@/lib/services/error";
 import { handleError } from "@/lib/utils/error-handle";
 import { Task } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export const createTask =
   (db: DB) => async (request: TaskRequest, response: Response) => {
@@ -93,11 +93,46 @@ export const deleteTask =
   };
 
 export const getTasks =
-  (db: DB) => async (_: TaskQueryRequest, response: Response) => {
+  (db: DB) => async (request: TaskQueryRequest, response: Response) => {
     try {
+      console.log(request.query);
+
       const tasks = await db.query.Task.findMany({
-        where: (task, { isNull }) => isNull(task.parentId),
-        orderBy: (task, { desc }) => [desc(task.priority)],
+        where: (task, { isNull }) =>
+          and(
+            isNull(task.parentId),
+            // @ts-expect-error
+            // biome-ignore lint/complexity/useOptionalChain: <explanation>
+            request.query.filter && request.query.filter.priority !== undefined
+              ? // @ts-expect-error
+                eq(task.priority, request.query.filter.priority)
+              : undefined,
+            // @ts-expect-error
+            // biome-ignore lint/complexity/useOptionalChain: used
+            request.query.filter && request.query.filter.done !== undefined
+              ? // @ts-expect-error
+                eq(task.done, request.query.filter.done)
+              : undefined,
+          ),
+
+        orderBy: (task, { desc, asc }) => [
+          // @ts-expect-error
+          // biome-ignore lint/complexity/useOptionalChain: used
+          ...(request.query.order && request.query.order.done
+            ? // @ts-expect-error
+              request.query.order.done === "asc"
+              ? [asc(task.done)]
+              : [desc(task.done)]
+            : []),
+          // @ts-expect-error
+          // biome-ignore lint/complexity/useOptionalChain: <explanation>
+          ...(request.query.order && request.query.order.priority
+            ? // @ts-expect-error
+              request.query.order.priority === "asc"
+              ? [asc(task.priority)]
+              : [desc(task.priority)]
+            : []),
+        ],
         with: {
           children: {
             orderBy: (task, { asc }) => [asc(task.title)],

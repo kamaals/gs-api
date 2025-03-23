@@ -13,6 +13,8 @@ import {
 import { createTask, deleteTask, getTasks, updateTask } from "./controller";
 import {
   allowDependTask,
+  buildFilterQuery,
+  buildOrderQuery,
   conditionallyAllowRecursive,
   flatRequestBody,
   recursiveParams,
@@ -29,7 +31,13 @@ export const task = (router: Router, db: DB) => {
     recursiveParams(),
     createTask(db),
   );
-  router.get("/task", validateRequestQuery(getTaskByQuery), getTasks(db));
+  router.get(
+    "/task",
+    validateRequestQuery(getTaskByQuery),
+    buildFilterQuery,
+    buildOrderQuery,
+    getTasks(db),
+  );
   router.patch(
     "/task/:id",
     flatRequestBody,

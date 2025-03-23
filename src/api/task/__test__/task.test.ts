@@ -19,7 +19,7 @@ beforeAll(async () => {
 describe("TASK API", () => {
   describe("get tasks", () => {
     describe("given router should work as expected", () => {
-      it("Should return 200 status but no user", async () => {
+      it("Should return 200 status but no task", async () => {
         const { body, statusCode } = await supertest(app as App).get(
           `${API_PATH}task`,
         );
@@ -154,6 +154,19 @@ describe("TASK API", () => {
       expect(body.message).toBe(
         "Could not recurse. This task is already recursive task",
       );
+    });
+  });
+
+  describe("get filtered tasks", () => {
+    describe("should filter tasks", () => {
+      it("Should return 200", async () => {
+        const { body, statusCode } = await supertest(app as App).get(
+          `${API_PATH}task?filter_done=true&filter_priority=1`,
+        );
+        expect(body.data.length).toBe(1);
+        expect(statusCode).toBe(200);
+        expect(body.message).toBe("Success");
+      });
     });
   });
 });
